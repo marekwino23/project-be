@@ -184,7 +184,7 @@ app.get('/logout', async (req, res)=> {
 
 let refreshTokens = []
 
-app.listen(4000, () => {
+app.listen(process.env.PORT || 4000, () => {
     console.log('listen on port 4000');
 })
 
