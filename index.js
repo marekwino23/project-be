@@ -215,13 +215,17 @@ app.post('/verify', (req, res)  =>{
     })
 });
 
-app.post('/refresh', (req, res)  =>{
+app.post('/refresh', (req, res)  => {
     req.json(posts.filter(post => post.req.body === req.user.name))
     const tokens = generateTokens(req.body);
     console.log("success: ", process.env);
     console.log('accessToken: ', accessToken);
     res.setHeader('Set-Cookie', ['HttpOnly']);
     res.json({accessToken, refreshToken })
+});
+
+app.get('/', (req, res) => {
+    return res.json({ connection:'workis'});
 });
 
 function generateTokens(data, options= {}) {
