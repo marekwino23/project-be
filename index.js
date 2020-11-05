@@ -141,12 +141,13 @@ app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         //const user = await db('users').first('*').where({ email });
+        console.log('login: ', email, password);
         await db.query(`SELECT * FROM users where email="${email}"`, async function (error, results, fields) {
-            console.log(results.length)
+            console.log('sql: ', error, results.length);
         if(error || !results.length) return res.status(401).json({ status: 'user not found'});
         if(results.length) {
             const validPass = await bcrypt.compare(password, results[0].password);
-            console.log('valid: ', validPass);
+            console.log('validPass: ', validPass);
             if(validPass) {
                 const signOptions = {
                     expiresIn: '1d',
@@ -159,11 +160,13 @@ app.post('/login', async (req, res) => {
                 expires: new Date(Date.now() + week),
                 sameSite: 'None'
             };
+            console.log('tokens: ', access_token );
             res.cookie('access_token', 'hagsdhagsdhj', {...cookieOptions})
             res.cookie('refresh_token', 'hjagsdjhagsjdh', { ...cookieOptions, expires: new Date(Date.now() + (week * 4)) }); 
             delete results[0].password;
             res.status(200).json({ user: results[0] });
             } else {
+                console.log('fail: ', res, email);
                 res.send(400).json({ status: 'fail' });
             }
         }
