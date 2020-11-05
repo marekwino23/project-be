@@ -143,11 +143,11 @@ app.post('/login', async (req, res) => {
         //const user = await db('users').first('*').where({ email });
         console.log('login: ', email, password);
         await db.query(`SELECT * FROM users where email="${email}"`, async function (error, results, fields) {
-            console.log('sql: ', error, results.length);
+            console.log('sql: ', error, results[0].password);
         if(error || !results.length) return res.status(401).json({ status: 'user not found'});
         if(results.length) {
             const validPass = await bcrypt.compare(password, results[0].password);
-            console.log('validPass: ', validPass);
+            console.log('validPass: ', validPass, password, results[0].password);
             if(validPass) {
                 const signOptions = {
                     expiresIn: '1d',
