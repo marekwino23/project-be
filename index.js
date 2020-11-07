@@ -121,7 +121,7 @@ app.get('/assemble/:id', (req, res) => {
 
 app.get('/download/:id', (req, res) => {
     const { id } = req.params;
-    db.query(`SELECT password FROM users where id="${id}"`,function (err, result) {
+    db.query(`SELECT name FROM users where id="${id}"`,function (err, result) {
         if(err) {
             console.log(err); 
             res.json({"error":true});
