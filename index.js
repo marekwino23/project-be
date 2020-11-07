@@ -119,6 +119,21 @@ app.get('/assemble/:id', (req, res) => {
 
 
 
+app.get('/download/:id', (req, res) => {
+    const { id } = req.params;
+    db.query(`SELECT password FROM users where id="${id}"`,function (err, result) {
+        if(err) {
+            console.log(err); 
+            res.json({"error":true});
+        }
+        else { 
+            console.log(result); 
+            res.json(result); 
+        }
+    });
+});
+
+
 app.patch('/update', async (req, res) => {
     try {
         const {id, email} = req.body;
