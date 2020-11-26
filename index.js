@@ -152,6 +152,23 @@ app.patch('/update', async (req, res) => {
 
 
 
+app.patch('/improve', async (req, res) => {
+    try {
+        const {id, password} = req.body;
+        console.log(`Update users SET password="${password}" where id="${id}"`);
+        await db.query(`Update users SET password="${password}" where id="${id}"`, async function (error, results, fields) {
+            console.log( results.length);
+            if(error || !results.changedRows) return res.status(401).json({ status: 'user not found'});
+            return res.status(200).json({ status: 'user update'});
+        });
+    } catch(error) {
+        res.status(500).json({ error: `something went wrong: ${error.message}`});
+    }
+});
+
+
+
+
 
 
 app.post('/login', async (req, res) => {
