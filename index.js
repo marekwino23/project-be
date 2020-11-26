@@ -8,7 +8,6 @@ const jwt = require('jsonwebtoken');
 const cookieP2arser = require('cookie-parser')
 const db = require('./config/database');
 const handlers = require('./handlers');
-const hbs = require("nodemailer-express-handlebars")
 const app = express();
 const router = express.Router();
 
