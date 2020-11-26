@@ -5,7 +5,7 @@ const express = require('express');
 const bcrypt = require("bcrypt");
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const cookieP2arser = require('cookie-parser')
+const cookieParser = require('cookie-parser')
 const db = require('./config/database');
 const handlers = require('./handlers');
 const app = express();
@@ -243,10 +243,6 @@ app.post('/refresh', (req, res)  => {
     console.log('accessToken: ', accessToken);
     res.setHeader('Set-Cookie', ['HttpOnly']);
     res.json({accessToken, refreshToken })
-});
-
-app.get('/', (req, res) => {
-    return res.json({ connection:'workis'});
 });
 
 function generateTokens(data, options= {}) {
