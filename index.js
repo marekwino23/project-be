@@ -102,6 +102,7 @@ app.get('/info/:id', (req, res) => {
 });
 
 app.get('/busy', (req, res) => {
+    const { id } = req.params;
     db.query("SELECT rezerwacja, godzina FROM users",function (err, result) {
         if(err) {
             console.log(err); 
