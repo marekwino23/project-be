@@ -61,8 +61,8 @@ app.post('/rez', async (req, res) => {
 
 app.patch('/del', async (req, res) => {
     try {
-        const { id, booking, time } = req.body;
-        await db.query(`Update users SET rezerwacja=NULL, godzina="${time}" where id="${id}"`, function (error, results, fields) {
+        const { id, booking, hour } = req.body;
+        await db.query(`Update users SET rezerwacja=NULL, godzina=NULL where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -75,8 +75,8 @@ app.patch('/del', async (req, res) => {
 
 app.patch('/erase', async (req, res) => {
     try {
-        const { id, booking, hour } = req.body;
-        await db.query(`Update users SET godzina=NULL where id="${id}"`, function (error, results, fields) {
+        const { id, booking, time } = req.body;
+        await db.query(`Update users SET godzina="${time}" where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
