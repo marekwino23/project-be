@@ -4,6 +4,11 @@ var db = mysql.createConnection({
   user     : process.env.DB_USER,
   password : process.env.DB_PASS,
   database : process.env.DB_DBNAME
+
+  // host     : 'localhost',
+  // user     : 'root',
+  // password : '',
+  // database : 'projekt'
 });
  
 db.connect(function(err){

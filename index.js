@@ -179,14 +179,9 @@ app.patch('/improve', async (req, res) => {
 });
 
 
-
-
-
-
 app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        //const user = await db('users').first('*').where({ email });
         console.log('login: ', email, password);
         await db.query(`SELECT * FROM users where email="${email}"`, async function (error, results, fields) {
             console.log('sql: ', error, results[0].password);
