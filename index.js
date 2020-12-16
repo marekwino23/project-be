@@ -75,7 +75,7 @@ app.patch('/del', async (req, res) => {
 
 app.patch('/erase', async (req, res) => {
     try {
-        const { id, booking, time } = req.body;
+        const { id, time } = req.body;
         await db.query(`Update users SET godzina="${time}" where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
