@@ -15,7 +15,7 @@ const router = express.Router();
 
 app.use(cors({
     origin: process.env.ORIGIN,
-    methods: ['GET','PUT','POST','DELETE', 'OPTIONS','PATCH'],
+    methods: ['GET','POST','DELETE','PATCH'],
     credentials: true
 }));
 
