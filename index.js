@@ -12,15 +12,13 @@ const app = express();
 const router = express.Router();
 
 const corsOptions = {
-    origin: process.env.ORIGIN,
+    origin: true,
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true,
-    preflightContinue: true
+    // preflightContinue: true
 };
 
 app.use(cors(corsOptions));
-
-// app.options('*', cors(corsOptions));
 
 app.use(cookieParser());
 
