@@ -11,19 +11,19 @@ const handlers = require('./handlers');
 const app = express();
 const router = express.Router();
 
-
-app.use(cors({
+const corsOptions = {
     origin: process.env.ORIGIN,
-    methods: ['GET','POST','DELETE', 'OPTIONS','PATCH'],
+    methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true
-}));
+};
 
+app.use(cors(corsOptions));
+
+app.options('*', cors(corsOptions));
 
 app.use(cookieParser());
 
-
 app.use(express.json());
-
 
 app.post('/register', async (req, res) => {
     try {
