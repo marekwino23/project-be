@@ -13,11 +13,11 @@ const router = express.Router();
 
 const corsOptions = {
     origin: (origin, callback) => {
-        console.log("Marek: ", origin, process.env.ORIGIN)
         if(process.env.ORIGIN === origin) {
             callback(null,true)
+        } else {
+            callback(new Error('Origin not allowed by cors'))
         }
-        callback(new Error('Origin not allowed by cors'))
     },
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true,
