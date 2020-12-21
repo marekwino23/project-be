@@ -12,10 +12,14 @@ const app = express();
 const router = express.Router();
 
 const corsOptions = {
-    origin: true,
+    origin: (origin, callback) => {
+        if(process.env.ORIGIN === origin) {
+            callback(null,true)
+        }
+        callback(new Error('Origin not allowed by cors'))
+    },
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true,
-    // preflightContinue: true
 };
 
 app.use(cors(corsOptions));
