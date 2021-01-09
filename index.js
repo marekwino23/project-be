@@ -51,7 +51,7 @@ app.post('/register', async (req, res) => {
 app.post('/rez', async (req, res) => {
     try {
         const { id, data, time } = req.body;
-        await db.query(`Update users SET rezerwacja="${data}", godzina="${time}"  where id="${id}"`, function (error, results, fields) {
+        await db.query(`Update users SET rezerwacja="${data}", godzina="${data}"  where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
