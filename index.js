@@ -1,9 +1,12 @@
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
+require('dotenv').config({ path: `.env` });
 var PORT = process.env.PORT || 4000;
 
 const express = require('express');
 const bcrypt = require("bcrypt");
+const md5 = require('md5') 
 const cors = require('cors');
+const generator = require('generate-password');
+const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
 const db = require('./config/database');
@@ -13,15 +16,18 @@ const router = express.Router();
 
 const corsOptions = {
     origin: (origin, callback) => {
+        console.log(process.env.NODE_ENV)
         if(process.env.ORIGIN === origin) {
             callback(null,true)
         } else {
+            console.error("error",process.env.ORIGIN, process.env.NODE_ENV, `.env.${process.env.NODE_ENV}`);
             callback(new Error('Origin not allowed by cors'))
         }
     },
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true,
 };
+
 
 app.use(cors(corsOptions));
 
@@ -31,40 +37,96 @@ app.use(express.json());
 
 app.post('/register', async (req, res) => {
     try {
-        const { name, surname, email, password } = req.body;
+        console.log("hello");
+        const { name, surname, email, password, type } = req.body;
+        console.log(type)
+        const special = generator.generate({
+            length: 6,
+            numbers: true
+        });
         await db.query(`SELECT * FROM users where email="${email}" `, async function (error, results, fields) {
         if(error || results.length) return res.status(400).json({ status: 'email already used in registration'});
         const hash = await bcrypt.hash(password, 10);
         // await db('users').insert({email: email, hash: hash});
-        await db.query(`INSERT INTO users(name, surname, email, password) VALUES("${name}", "${surname}","${email}", "${hash}")`, function (error, results, fields) {
+        await db.query(`INSERT INTO users(name, surname, email, password, special, type) VALUES("${name}", "${surname}","${email}", "${hash}", "${special}", "${type}")`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
-           res.status(200).json({ status: 'success' });  
+           res.status(200).json({ status: 'success', file: type });  
         }); 
     });
+
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+        user:  "marekw1996@gmail.com",
+        pass:  "Mareczek24"
+        }
+    });
+
+  var mailOptions = {
+    from: "http://localhost:3000/register",
+    to: req.body.email,
+    subject: 'Potwierdzenie rejestracji: barber-app, wysłany kod jest w razie zapomnienia hasła, http://localhost:3000/valid',
+    html: data
+  };
+
+  transporter.sendMail(mailOptions, function(error, info){ 
+    if (error) {
+      console.log(error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+
     } catch(error) {
+        console.error("hello error");
         res.status(500).json({ error: `something went wrong: ${error.message}`});
     }
 });
 
+app.post('/valid', async (req, res) => {
+        const { email,password } = req.body;
+        console.log(password)
+        const hash = await bcrypt.hash(password, 10);
+        await db.query(`SELECT special FROM users where email="${email}"`, async function (error, result, fields) {
+        console.log(result)
+        if(result[0].special === req.body.code){
+            await db.query(`Update users SET password="${hash}" where email="${email}"`, function (error, results, fields) {
+                console.log("success")
+                res.status(200).json({status:"success"})
+                 })
+        }
+        else {
+            console.log("failed")
+            res.status(400).json({status:"failed"})
+        }
+    })
+
+});
 
 app.post('/rez', async (req, res) => {
     try {
         const { id, data, time } = req.body;
-        await db.query(`Update users SET rezerwacja="${data}", godzina="${time}"  where id="${id}"`, function (error, results, fields) {
+        if(time === ""){
+            res.status(400).json({info: "incorrect hour because you can t choose past time" })
+            console.log("failed")
+        }
+        else{
+        await db.query(`Update users SET rezerwacja="${data}", godzina="${time}" where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
-            if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
+            if(error) return res.status(400).json({ status: `booking failed due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
-        }); 
-     } catch(error) {
+        })}; 
+     }
+     catch(error) {
         res.status(500).json({ error: `something went wrong: ${error.message}`});
     }
 });
 
 
-app.patch('/del', async (req, res) => {
+app.put('/erase', async (req, res) => {
     try {
-        const { id, booking, hour } = req.body;
+        const { id } = req.body;
         await db.query(`Update users SET rezerwacja=NULL, godzina=NULL where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
@@ -76,7 +138,7 @@ app.patch('/del', async (req, res) => {
 });
 
 
-app.patch('/erase', async (req, res) => {
+app.put('/changed', async (req, res) => {
     try {
         const { id, time } = req.body;
         await db.query(`Update users SET godzina="${time}" where id="${id}"`, function (error, results, fields) {
@@ -99,21 +161,50 @@ app.get('/info/:id', (req, res) => {
         }
         else { 
             console.log(result); 
-            res.json(result); 
+            const data = result.map(record => {
+                if(record.godzina == null) {
+                    record.godzina = "brak godziny";
+                    return record;
+                }
+                return record;
+            })
+            res.json(data); 
         }
     });
 });
 
-app.get('/busy', (req, res) => {
+app.post('/busy', (req, res) => {
+    const time = req.body.time
     const { id } = req.params;
-    db.query("SELECT rezerwacja, godzina FROM users",function (err, result) {
-        if(err) {
+    db.query(`SELECT * FROM users where godzina="${time}"`,function (err, result) {
+        if(result.length) {
             console.log(err); 
-            res.json({"error":true});
+            res.json({status: "This time is used"});
         }
         else { 
-            console.log(result); 
-            res.json(result); 
+            console.log("good"); 
+            res.json({status: "This time is free"}); 
+        }
+    });
+});
+
+
+app.post('/checkEmail', (req, res) => {
+    const email  = req.body;
+    console.log(email)
+    const { id } = req.params;
+    db.query(`SELECT * FROM users WHERE email="${email}"`, function (err, result, fields) {
+        if(result.length) {
+            console.log(err); 
+            res.json({status: 'Email already registered', hasEmail: true });
+        }
+        else if(result.length === 0){
+            console.log("free"); 
+            res.json({ status: 'Email is available', hasEmail: false }); 
+        }
+        else { 
+            console.log("done"); 
+            res.json({ status: 'Email is available', hasEmail: false }); 
         }
     });
 });
@@ -134,23 +225,22 @@ app.get('/assemble/:id', (req, res) => {
 });
 
 
+// app.get('/download/:id', (req, res) => {
+//     const { id } = req.params;
+//     db.query(`SELECT password FROM users where id="${id}"`,function (err, result) {
+//         if(err) {
+//             console.log(err); 
+//             res.json({"error":true});
+//         }
+//         else { 
+//             console.log(result); 
+//             res.json(result); 
+//         }
+//     });
+// });
 
-app.get('/download/:id', (req, res) => {
-    const { id } = req.params;
-    db.query(`SELECT password FROM users where id="${id}"`,function (err, result) {
-        if(err) {
-            console.log(err); 
-            res.json({"error":true});
-        }
-        else { 
-            console.log(result); 
-            res.json(result); 
-        }
-    });
-});
 
-
-app.patch('/update', async (req, res) => {
+app.put('/update', async (req, res) => {
     try {
         const {id, email} = req.body;
         console.log(`Update users SET email="${email}" where id="${id}"`);
@@ -166,7 +256,7 @@ app.patch('/update', async (req, res) => {
 
 
 
-app.patch('/improve', async (req, res) => {
+app.put('/improve', async (req, res) => {
     try {
         const {id, password} = req.body;
         const hash = await bcrypt.hash(password, 10);
@@ -191,11 +281,12 @@ app.post('/login', async (req, res) => {
         if(error || !results.length) return res.status(401).json({ status: 'user not found'});
         if(results.length) {
             const validPass = await bcrypt.compare(password, results[0].password);
-            console.log('validPass: ', validPass, password, results[0].password);
+            const hash = await bcrypt.hash(password,10);
+            console.log('validPass: ', validPass, hash, results[0].password);
             if(validPass) {
                 const signOptions = {
                     expiresIn: '1d',
-                  };
+                };
             const { access_token, refresh_token } = generateTokens(req.body, signOptions);
             const week = 7 * 24 * 3600 * 1000; //1 weeks  
             const cookieOptions = {
@@ -205,8 +296,8 @@ app.post('/login', async (req, res) => {
                 sameSite: 'None'
             };
             console.log('tokens: ', access_token );
-            res.cookie('access_token', 'hagsdhagsdhj', {...cookieOptions})
-            res.cookie('refresh_token', 'hjagsdjhagsjdh', { ...cookieOptions, expires: new Date(Date.now() + (week * 4)) }); 
+            res.cookie('access_token', access_token, {...cookieOptions})
+            res.cookie('refresh_token', refresh_token, { ...cookieOptions, expires: new Date(Date.now() + (week * 4)) }); 
             delete results[0].password;
             res.status(200).json({ user: results[0] });
             } else {
@@ -231,7 +322,7 @@ app.get('/logout', async (req, res)=> {
 
 });
 
-let refreshTokens = []
+let refreshTokens = [];
 
 app.listen(process.env.PORT || 4000, () => {
     console.log('listen on port 4000');
@@ -257,7 +348,7 @@ app.listen(process.env.PORT || 4000, () => {
 
 app.post('/verify', (req, res)  =>{
     console.log('req headers: ', req.cookies);
-    jwt.verify(req.cookies.access_token, process.env.ACCESS_TOKEN_SECRET, (err,user) => { 
+    jwt.verify(req.cookies.access_token, process.env.ACCESS_TOKEN_SECRET, (err, user) => { 
         if (err) return res.status(401).json({ error: 'invalid token' });
         return res.status(200).json({ error: '' });
     })
@@ -265,11 +356,10 @@ app.post('/verify', (req, res)  =>{
 
 app.post('/refresh', (req, res)  => {
     req.json(posts.filter(post => post.req.body === req.user.name))
-    const tokens = generateTokens(req.body);
+    const { access_token, refresh_token } = generateTokens(req.body);
     console.log("success: ", process.env);
-    console.log('accessToken: ', accessToken);
     res.setHeader('Set-Cookie', ['HttpOnly']);
-    res.json({accessToken, refreshToken })
+    res.json({access_token, refresh_token })
 });
 
 function generateTokens(data, options= {}) {
@@ -278,21 +368,6 @@ function generateTokens(data, options= {}) {
     refreshTokens.push(refresh_token);
     return { access_token, refresh_token };
 }
-
-function authenticateToken(req, res, next){
-    const authHeader = req.headers["authorization"]
-    const token = authHeader && authHeader.split(' ')[1]
-    if(token == null) return res.sendStatus(401)
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err,user) => { 
-    if (err) return res.sendStatus(401)
-    req.user = user
-    next()
-})
-}
-
-
-
-
 
 
 module.exports = app;
