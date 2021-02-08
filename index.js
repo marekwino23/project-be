@@ -38,7 +38,7 @@ app.use(express.json());
 app.post('/register', async (req, res) => {
     try {
         console.log("hello");
-        const { name, surname, email, password, type } = req.body;
+        const { name, surname, email, password } = req.body;
         console.log(type)
         const special = generator.generate({
             length: 6,
@@ -48,7 +48,7 @@ app.post('/register', async (req, res) => {
         if(error || results.length) return res.status(400).json({ status: 'email already used in registration'});
         const hash = await bcrypt.hash(password, 10);
         // await db('users').insert({email: email, hash: hash});
-        await db.query(`INSERT INTO users(name, surname, email, password, special, type) VALUES("${name}", "${surname}","${email}", "${hash}", "${special}", "${type}")`, function (error, results, fields) {
+        await db.query(`INSERT INTO users(name, surname, email, password, special, type) VALUES("${name}", "${surname}","${email}", "${hash}", "${special}")`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success', file: type });  
@@ -210,6 +210,21 @@ app.post('/checkEmail', (req, res) => {
 });
 
 
+app.get('/list', (req, res) => {
+    const { id } = req.params;
+    db.query(`SELECT * FROM users`,function (err, result) {
+        if(err) {
+            console.log(err); 
+            res.json({"error":true});
+        }
+        else { 
+            console.log(result); 
+            res.json(result); 
+        }
+    });
+});
+
+
 app.get('/assemble/:id', (req, res) => {
     const { id } = req.params;
     db.query(`SELECT email FROM users where id="${id}"`,function (err, result) {
@@ -299,7 +314,7 @@ app.post('/login', async (req, res) => {
             res.cookie('access_token', access_token, {...cookieOptions})
             res.cookie('refresh_token', refresh_token, { ...cookieOptions, expires: new Date(Date.now() + (week * 4)) }); 
             delete results[0].password;
-            res.status(200).json({ user: results[0] });
+            res.status(200).json({ user: results[0], type: results[0].type });
             } else {
                 console.log('fail: ', res, email);
                 res.send(400).json({ status: 'fail' });
