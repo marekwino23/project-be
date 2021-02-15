@@ -39,7 +39,6 @@ app.post('/register', async (req, res) => {
     try {
         console.log("hello");
         const { name, surname, email, password } = req.body;
-        console.log(type)
         const special = generator.generate({
             length: 6,
             numbers: true
@@ -48,10 +47,10 @@ app.post('/register', async (req, res) => {
         if(error || results.length) return res.status(400).json({ status: 'email already used in registration'});
         const hash = await bcrypt.hash(password, 10);
         // await db('users').insert({email: email, hash: hash});
-        await db.query(`INSERT INTO users(name, surname, email, password, special, type) VALUES("${name}", "${surname}","${email}", "${hash}", "${special}")`, function (error, results, fields) {
+        await db.query(`INSERT INTO users(name, surname, email, password, special) VALUES("${name}", "${surname}","${email}", "${hash}", "${special}")`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
-           res.status(200).json({ status: 'success', file: type });  
+           res.status(200).json({ status: 'success' });  
         }); 
     });
 
@@ -67,7 +66,6 @@ app.post('/register', async (req, res) => {
     from: "http://localhost:3000/register",
     to: req.body.email,
     subject: 'Potwierdzenie rejestracji: barber-app, wysłany kod jest w razie zapomnienia hasła, http://localhost:3000/valid',
-    html: data
   };
 
   transporter.sendMail(mailOptions, function(error, info){ 
@@ -123,6 +121,26 @@ app.post('/rez', async (req, res) => {
     }
 });
 
+
+
+app.get("/getuserData", function(req,res){
+    db.query(`SELECT * FROM users`,function (err, result) {
+        if(err) {
+            console.log(err); 
+            res.json({"error":true});
+        }
+        else { 
+            console.log(result); 
+            res.json(result); 
+        }
+    });
+});
+
+
+app.patch("/editUser",function(req,res){
+  const{name,surname,email,password} = req.body
+  console.log(name)
+})
 
 app.put('/erase', async (req, res) => {
     try {
@@ -223,6 +241,22 @@ app.get('/list', (req, res) => {
         }
     });
 });
+
+
+app.post('/deleteUser', (req,res) =>{
+const {id} = req.body
+console.log(`Delete from users where id=${id}`)
+db.query(`Delete from users where id=${id}`, function(err,result,fields){
+    if(err){
+        console.error("error")
+        res.status(401).json({status: "failed"})
+    }
+    else{
+        console.log("done")
+        res.status(200).json({status: "success"})
+    }
+})
+})
 
 
 app.get('/assemble/:id', (req, res) => {
