@@ -138,8 +138,17 @@ app.get("/getuserData", function(req,res){
 
 
 app.patch("/editUser",function(req,res){
-  const{name,surname,email,password} = req.body
-  console.log(name)
+  const{id,name,surname,email,password} = req.body
+  const hash = bcrypt.hash(password, 10);
+  console.log(id,name)
+  db.query(`Update users set name="${name}", surname="${surname}", email = "${email}", password = "${hash}" where id=${id}`, function(err, result,fields){
+      if(err){
+          console.error("error")
+      }
+      else{
+          res.send({status: "success"})
+      }
+  })
 })
 
 app.put('/erase', async (req, res) => {
