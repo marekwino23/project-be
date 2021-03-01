@@ -19,7 +19,7 @@ const router = express.Router();
 
 const corsOptions = {
     origin: (origin, callback) => {
-        console.log(process.env.NODE_ENV)
+        console.info('info:', process.env.ORIGIN, origin, process.env.NODE_ENV);
         if(process.env.ORIGIN === origin) {
             callback(null,true)
         } else {
