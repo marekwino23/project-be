@@ -18,7 +18,15 @@ const app = express();
 const router = express.Router();
 
 const corsOptions = {
-    origin: true,
+    origin: function (origin, callback) {
+        console.info('info:', process.env.ORIGIN, origin, process.env.NODE_ENV);
+        if(process.env.ORIGIN === 'https://barber-win.herokuapp.com') {
+            callback(null,true)
+        } else {
+            console.error("error",process.env.ORIGIN, process.env.NODE_ENV);
+            callback(new Error(`Origin ${process.env.ORIGIN} not allowed by cors`))
+        }
+    },
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true,
 };
@@ -65,11 +73,11 @@ app.post('/register', async (req, res) => {
         }
     });
 
-  var mailOptions = {
-    from: "https://sheltered-oasis-25992.herokuapp.com/register",
-    to: req.body.email,
-    subject: 'Potwierdzenie rejestracji: barber-app, wysłany kod jest w razie zapomnienia hasła, https://sheltered-oasis-25992.herokuapp.com/valid',
-  };
+    var mailOptions = {
+        from: process.env.ORIGIN,
+        to: req.body.email,
+        subject: `Potwierdzenie rejestracji: barber-app, wysłany kod jest w razie zapomnienia hasła, ${process.env.ORIGIN}/valid`,
+    };
 
   transporter.sendMail(mailOptions, function(error, info){ 
     if (error) {
