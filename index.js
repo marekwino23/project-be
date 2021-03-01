@@ -18,9 +18,9 @@ const app = express();
 const router = express.Router();
 
 const corsOptions = {
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
         console.info('info:', process.env.ORIGIN, origin, process.env.NODE_ENV);
-        if("https://barber-win.herokuapp.com" === origin) {
+        if(process.env.ORIGIN === 'https://barber-win.herokuapp.com') {
             callback(null,true)
         } else {
             console.error("error",process.env.ORIGIN, process.env.NODE_ENV);
