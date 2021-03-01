@@ -12,7 +12,7 @@ const generator = require('generate-password');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
-// const db = require('./config/database');
+const db = require('./config/database');
 const handlers = require('./handlers');
 const app = express();
 const router = express.Router();
@@ -36,12 +36,14 @@ app.use(cors(corsOptions));
 
 app.use(cookieParser());
 
-app.use(express.json());
-
 app.get('/', (req,res) => {
     console.log('hello home');
-    res.status(200).send('<html><body><h1>Welcome API</h1><ul><li>Register</li></ul></body></html>');
+    res.writeHeader(200, {"Content-Type": "text/html"});  
+    res.write('<html><body><h1>Welcome API</h1><ul><li>Register</li></ul></body></html>');  
+    res.end();
 });
+
+app.use(express.json());
 
 app.post('/register', async (req, res) => {
     try {
