@@ -18,7 +18,15 @@ const app = express();
 const router = express.Router();
 
 const corsOptions = {
-    origin: true,
+    origin: function (origin, callback) {
+        console.info('info:', process.env.ORIGIN, origin, process.env.NODE_ENV);
+        if(process.env.ORIGIN === 'https://barber-win.herokuapp.com') {
+            callback(null,true)
+        } else {
+            console.error("error",process.env.ORIGIN, process.env.NODE_ENV);
+            callback(new Error(`Origin ${process.env.ORIGIN} not allowed by cors`))
+        }
+    },
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true,
 };
@@ -31,8 +39,8 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.get('/', (req,res) => {
-    console.log('res: ', req, res);
-    res.status(200).json({ res: 'hello' });
+    console.log('hello home');
+    res.status(200).send('<html><body><h1>Welcome API</h1><ul><li>Register</li></ul></body></html>');
 });
 
 app.post('/register', async (req, res) => {
@@ -383,8 +391,8 @@ app.get('/logout', async (req, res)=> {
 
 let refreshTokens = [];
 
-app.listen(process.env.PORT || 4000, () => {
-    console.log('listen on port 4000');
+app.listen(PORT, () => {
+    console.log(`listen on port ${PORT}`);
 })
 
 // app.post('/token', (req, res) => {
