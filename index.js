@@ -5,6 +5,9 @@ const express = require('express');
 const bcrypt = require("bcrypt");
 const md5 = require('md5') 
 const cors = require('cors');
+const socketio = require('socket.io')
+const ejs = require('ejs')
+const Nexmo = require('nexmo')
 const generator = require('generate-password');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
@@ -35,6 +38,10 @@ app.use(cookieParser());
 
 app.use(express.json());
 
+app.get('/', (req,res) => {
+    res.send('hello')
+})
+
 app.post('/register', async (req, res) => {
     try {
         console.log("hello");
@@ -54,6 +61,7 @@ app.post('/register', async (req, res) => {
         }); 
     });
 
+
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -63,9 +71,9 @@ app.post('/register', async (req, res) => {
     });
 
   var mailOptions = {
-    from: "http://localhost:3000/register",
+    from: "https://sheltered-oasis-25992.herokuapp.com/register",
     to: req.body.email,
-    subject: 'Potwierdzenie rejestracji: barber-app, wysłany kod jest w razie zapomnienia hasła, http://localhost:3000/valid',
+    subject: 'Potwierdzenie rejestracji: barber-app, wysłany kod jest w razie zapomnienia hasła, https://sheltered-oasis-25992.herokuapp.com/valid',
   };
 
   transporter.sendMail(mailOptions, function(error, info){ 
