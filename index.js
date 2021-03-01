@@ -23,8 +23,8 @@ const corsOptions = {
         if(process.env.ORIGIN === origin) {
             callback(null,true)
         } else {
-            console.error("error",process.env.ORIGIN, process.env.NODE_ENV, `.env.${process.env.NODE_ENV}`);
-            callback(new Error('Origin not allowed by cors'))
+            console.error("error",process.env.ORIGIN, process.env.NODE_ENV);
+            callback(new Error(`Origin ${process.env.ORIGIN} not allowed by cors`))
         }
     },
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
