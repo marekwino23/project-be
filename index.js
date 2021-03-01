@@ -18,15 +18,7 @@ const app = express();
 const router = express.Router();
 
 const corsOptions = {
-    origin: function (origin, callback) {
-        console.info('info:', process.env.ORIGIN, origin, process.env.NODE_ENV);
-        if(process.env.ORIGIN === 'https://barber-win.herokuapp.com') {
-            callback(null,true)
-        } else {
-            console.error("error",process.env.ORIGIN, process.env.NODE_ENV);
-            callback(new Error(`Origin ${process.env.ORIGIN} not allowed by cors`))
-        }
-    },
+    origin: true,
     methods: ['GET','POST','DELETE','PATCH','OPTIONS'],
     credentials: true,
 };
@@ -38,16 +30,10 @@ app.use(cookieParser());
 
 app.use(express.json());
 
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });
-
 app.get('/', (req,res) => {
     console.log('res: ', req, res);
-    res.status(200).send('hello');
-})
+    res.status(200).json({ res: 'hello' });
+});
 
 app.post('/register', async (req, res) => {
     try {
@@ -161,7 +147,7 @@ app.patch("/editUser",function(req,res){
           console.error("error")
       }
       else{
-          res.send({status: "success"})
+          res.json({status: "success"})
       }
   })
 })
@@ -375,7 +361,7 @@ app.post('/login', async (req, res) => {
             res.status(200).json({ user: results[0], type: results[0].type });
             } else {
                 console.log('fail: ', res, email);
-                res.send(400).json({ status: 'fail' });
+                res.status(400).json({ status: 'fail' });
             }
         }
     });
