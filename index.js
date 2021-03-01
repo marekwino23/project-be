@@ -57,7 +57,7 @@ app.post('/register', async (req, res) => {
         if(error || results.length) return res.status(400).json({ status: 'email already used in registration'});
         const hash = await bcrypt.hash(password, 10);
         // await db('users').insert({email: email, hash: hash});
-        await db.query(`INSERT INTO users(name, surname, email, password, special) VALUES("${name}", "${surname}","${email}", "${hash}", "${special}")`, function (error, results, fields) {
+        await db.query(`INSERT INTO users(name, surname, email, password) VALUES("${name}", "${surname}","${email}", "${hash}")`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
