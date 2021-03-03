@@ -1,9 +1,14 @@
 var mysql      = require('mysql');
 var db = mysql.createConnection({
-  host: process.env.DB_HOST, //'localhost',
-  user: process.env.DB_USER, // 'root',
-  password: process.env.DB_PASS, // '',
-  database: process.env.DB_DBNAME // 'projekt'
+  host:  'localhost',
+  user:   'root',
+  password: '',
+  database: 'projekt'
+
+  // host: process.env.DB_HOST, 
+  // user: process.env.DB_USER, 
+  // password: process.env.DB_PASS, 
+  // database: process.env.DB_DBNAME 
 });
  
 db.connect(function(err){

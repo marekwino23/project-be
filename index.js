@@ -20,7 +20,7 @@ const router = express.Router();
 const corsOptions = {
     origin: function (origin, callback) {
         console.info('info:', process.env.ORIGIN, origin, process.env.NODE_ENV);
-        if(process.env.ORIGIN === 'https://barber-win.herokuapp.com') {
+        if(process.env.ORIGIN === 'http://localhost:3000') {
             callback(null,true)
         } else {
             console.error("error",process.env.ORIGIN, process.env.NODE_ENV);
@@ -57,7 +57,7 @@ app.post('/register', async (req, res) => {
         if(error || results.length) return res.status(400).json({ status: 'email already used in registration'});
         const hash = await bcrypt.hash(password, 10);
         // await db('users').insert({email: email, hash: hash});
-        await db.query(`INSERT INTO users(name, surname, email, password) VALUES("${name}", "${surname}","${email}", "${hash}")`, function (error, results, fields) {
+        await db.query(`INSERT INTO users(name, surname, email, password, special) VALUES("${name}", "${surname}","${email}", "${hash}", "${special}")`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -113,15 +113,15 @@ app.post('/valid', async (req, res) => {
 
 });
 
-app.post('/rez', async (req, res) => {
+app.patch('/rez', async (req, res) => {
     try {
-        const { id, data, time } = req.body;
+        const { id, data, time, service } = req.body;
         if(time === ""){
             res.status(400).json({info: "incorrect hour because you can t choose past time" })
             console.log("failed")
         }
         else{
-        await db.query(`Update users SET rezerwacja="${data}", godzina="${time}" where id="${id}"`, function (error, results, fields) {
+        await db.query(`Update users SET rezerwacja="${data}", godzina="${time}", service="${service}" where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `booking failed due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -309,7 +309,7 @@ app.get('/assemble/:id', (req, res) => {
 // });
 
 
-app.put('/update', async (req, res) => {
+app.patch('/update', async (req, res) => {
     try {
         const {id, email} = req.body;
         console.log(`Update users SET email="${email}" where id="${id}"`);
@@ -325,7 +325,7 @@ app.put('/update', async (req, res) => {
 
 
 
-app.put('/improve', async (req, res) => {
+app.patch('/improve', async (req, res) => {
     try {
         const {id, password} = req.body;
         const hash = await bcrypt.hash(password, 10);
