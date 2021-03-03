@@ -121,7 +121,7 @@ app.patch('/rez', async (req, res) => {
             console.log("failed")
         }
         else{
-        await db.query(`Update users SET rezerwacja="${data}", godzina="${time}", service="${service}" where id="${id}"`, function (error, results, fields) {
+        await db.query(`Update users SET date="${data}", hour="${time}", service="${service}" where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `booking failed due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -162,10 +162,10 @@ app.patch("/editUser",function(req,res){
   })
 })
 
-app.put('/erase', async (req, res) => {
+app.patch('/erase', async (req, res) => {
     try {
         const { id } = req.body;
-        await db.query(`Update users SET rezerwacja=NULL, godzina=NULL where id="${id}"`, function (error, results, fields) {
+        await db.query(`Update users SET date=NULL, hour=NULL where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -176,10 +176,10 @@ app.put('/erase', async (req, res) => {
 });
 
 
-app.put('/changed', async (req, res) => {
+app.patch('/changed', async (req, res) => {
     try {
         const { id, time } = req.body;
-        await db.query(`Update users SET godzina="${time}" where id="${id}"`, function (error, results, fields) {
+        await db.query(`Update users SET hour="${time}" where id="${id}"`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -192,7 +192,7 @@ app.put('/changed', async (req, res) => {
 
 app.get('/info/:id', (req, res) => {
     const { id } = req.params;
-    db.query(`SELECT rezerwacja, godzina FROM users where id="${id}"`,function (err, result) {
+    db.query(`SELECT date, hour, service FROM users where id="${id}"`,function (err, result) {
         if(err) {
             console.log(err); 
             res.json({"error":true});
@@ -249,7 +249,6 @@ app.post('/checkEmail', (req, res) => {
 
 
 app.get('/list', (req, res) => {
-    const { id } = req.params;
     db.query(`SELECT * FROM users`,function (err, result) {
         if(err) {
             console.log(err); 
