@@ -113,7 +113,7 @@ app.post('/valid', async (req, res) => {
 
 });
 
-app.patch('/rez', async (req, res) => {
+app.post('/rez', async (req, res) => {
     try {
         const { id, data, time, service } = req.body;
         if(time === ""){
@@ -121,7 +121,7 @@ app.patch('/rez', async (req, res) => {
             console.log("failed")
         }
         else{
-        await db.query(`Update users SET date="${data}", hour="${time}", service="${service}" where id="${id}"`, function (error, results, fields) {
+        await db.query(`INSERT INTO data(date,hour,service,user_id) Values("${data}", "${time}", "${service}", ${id})`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `booking failed due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -162,12 +162,12 @@ app.patch("/editUser",function(req,res){
   })
 })
 
-app.patch('/erase', async (req, res) => {
+app.post('/erase', async (req, res) => {
     try {
         const { id } = req.body;
-        await db.query(`Update users SET date=NULL, hour=NULL where id="${id}"`, function (error, results, fields) {
+        await db.query(`DELETE from data where user_id=${id}`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
-            if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
+            if(error) return res.status(400).json({ status: `data could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
         }); 
      } catch(error) {
@@ -179,7 +179,7 @@ app.patch('/erase', async (req, res) => {
 app.patch('/changed', async (req, res) => {
     try {
         const { id, time } = req.body;
-        await db.query(`Update users SET hour="${time}" where id="${id}"`, function (error, results, fields) {
+        await db.query(`Update data SET hour="${time}" where user_id=${id}`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -192,37 +192,42 @@ app.patch('/changed', async (req, res) => {
 
 app.get('/info/:id', (req, res) => {
     const { id } = req.params;
-    db.query(`SELECT date, hour, service FROM users where id="${id}"`,function (err, result) {
+    console.log(`SELECT * FROM data where user_id=${id}`)
+    db.query(`SELECT * FROM data where user_id=${id}`,function (err, result) {
         if(err) {
             console.log(err); 
-            res.json({"error":true});
         }
-        else { 
+        else if(result) { 
+            console.log("lack")
+            res.json({ status:"lack"}); 
+        }
+        else{
             console.log(result); 
             const data = result.map(record => {
-                if(record.godzina == null) {
-                    record.godzina = "brak godziny";
-                    return record;
-                }
-                return record;
+                console.log(record)
             })
-            res.json(data); 
+            res.json({data:data, status:"success"}); 
         }
     });
 });
 
-app.post('/busy', (req, res) => {
-    const time = req.body.time
-    const { id } = req.params;
-    db.query(`SELECT * FROM users where godzina="${time}"`,function (err, result) {
-        if(result.length) {
-            console.log(err); 
-            res.json({status: "This time is used"});
-        }
-        else { 
-            console.log("good"); 
-            res.json({status: "This time is free"}); 
-        }
+app.get('/busy/:time', (req, res) => {
+    const time = req.params.time
+    console.log(time)
+    console.log(`SELECT date FROM data where hour="${time}"`)
+    db.query(`SELECT date FROM data where hour="${time}"`,function (err, result) {
+        console.log(result)
+       if(err){
+console.error("error")
+       }
+       else if(result.length){
+           console.log("info")
+           res.status(400).send({status:"failed"})
+       }
+       else{
+           console.log("free")
+           res.status(200).send({status:"success"})
+       }
     });
 });
 
