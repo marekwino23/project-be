@@ -20,7 +20,7 @@ const router = express.Router();
 const corsOptions = {
     origin: function (origin, callback) {
         console.info('info:', process.env.ORIGIN, origin, process.env.NODE_ENV);
-        if(process.env.ORIGIN === 'https://barber-win.herokuapp.com') {
+        if(process.env.ORIGIN === 'http://localhost:4000') {
             callback(null,true)
         } else {
             console.error("error",process.env.ORIGIN, process.env.NODE_ENV);
@@ -197,18 +197,15 @@ app.get('/info/:id', (req, res) => {
         if(err) {
             console.log(err); 
         }
-        else if(result) { 
+        else if(!result) { 
             console.log("lack")
             res.json({ status:"lack"}); 
         }
         else{
             console.log(result); 
-            const data = result.map(record => {
-                console.log(record)
-            })
-            res.json({data:data, status:"success"}); 
+            res.json({date:result[0].date, time: result[0].hour, service: result[0].service, status:"success"}); 
         }
-    });
+    })
 });
 
 app.get('/busy/:time', (req, res) => {
