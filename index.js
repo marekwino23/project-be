@@ -64,29 +64,6 @@ app.post('/register', async (req, res) => {
         }); 
     });
 
-
-    var transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-        user:  "marekw1996@gmail.com",
-        pass:  "Mareczek24"
-        }
-    });
-
-    var mailOptions = {
-        from: process.env.ORIGIN,
-        to: req.body.email,
-        subject: `Potwierdzenie rejestracji: barber-app, wysłany kod jest w razie zapomnienia hasła, ${process.env.ORIGIN}/valid`,
-    };
-
-  transporter.sendMail(mailOptions, function(error, info){ 
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
-  });
-
     } catch(error) {
         console.error("hello error");
         res.status(500).json({ error: `something went wrong: ${error.message}`});
@@ -197,12 +174,12 @@ app.get('/info/:id', (req, res) => {
         if(err) {
             console.log(err); 
         }
-        else if(!result) { 
+        else if(!result.length) { 
             console.log("lack")
             res.json({ status:"lack"}); 
         }
         else{
-            console.log(result); 
+            console.log(result.length); 
             res.json({date:result[0].date, time: result[0].hour, service: result[0].service, status:"success"}); 
         }
     })
@@ -294,20 +271,6 @@ app.get('/assemble/:id', (req, res) => {
     });
 });
 
-
-// app.get('/download/:id', (req, res) => {
-//     const { id } = req.params;
-//     db.query(`SELECT password FROM users where id="${id}"`,function (err, result) {
-//         if(err) {
-//             console.log(err); 
-//             res.json({"error":true});
-//         }
-//         else { 
-//             console.log(result); 
-//             res.json(result); 
-//         }
-//     });
-// });
 
 
 app.patch('/update', async (req, res) => {
