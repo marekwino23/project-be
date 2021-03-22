@@ -180,21 +180,26 @@ app.get('/info/:id', (req, res) => {
         }
         else{
             console.log(result.length); 
-            res.json({date:result[0].date, time: result[0].hour, service: result[0].service, status:"success"}); 
+            res.json({result, status:"success"}); 
         }
     })
 });
 
-app.get('/busy/:time', (req, res) => {
+app.get('/busy/:time/:data', (req, res) => {
+    const data = req.params.data
     const time = req.params.time
-    console.log(time)
-    console.log(`SELECT date FROM data where hour="${time}"`)
-    db.query(`SELECT date FROM data where hour="${time}"`,function (err, result) {
+    console.log(time,data)
+    console.log(`SELECT date,hour FROM data where hour="${time}"`)
+    db.query(`SELECT date,hour FROM data where hour="${time}"`,function (err, result) {
         console.log(result)
        if(err){
 console.error("error")
        }
-       else if(result.length){
+       else if(!result.length){
+        console.log("free")
+        res.status(200).send({status:"success"})
+       }
+       else if(result[0].hour === time && result[0].date === data){
            console.log("info")
            res.status(400).send({status:"failed"})
        }
