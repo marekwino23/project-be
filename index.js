@@ -245,7 +245,7 @@ app.post('/checkEmail', (req, res) => {
 
 
 app.get('/list', (req, res) => {
-    db.query(`SELECT * FROM users`,function (err, result) {
+    db.query(`SELECT users.id, users.name, users.surname, users.email, data.date, data.hour, data.service FROM users JOIN data ON users.id`,function (err, result) {
         if(err) {
             console.log(err); 
             res.json({"error":true});
