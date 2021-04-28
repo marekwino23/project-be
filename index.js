@@ -37,7 +37,6 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 
 app.get('/', (req,res) => {
-    console.log('hello home');
     res.writeHeader(200, {"Content-Type": "text/html"});  
     res.write('<html><body><h1>Welcome API</h1><ul><li>Register</li></ul></body></html>');  
     res.end();
@@ -47,7 +46,6 @@ app.use(express.json());
 
 app.post('/register', async (req, res) => {
     try {
-        console.log("hello");
         const { name, surname, email, password } = req.body;
         const special = generator.generate({
             length: 6,
@@ -92,13 +90,13 @@ app.post('/valid', async (req, res) => {
 
 app.post('/rez', async (req, res) => {
     try {
-        const { id, data, time, service } = req.body;
+        const { id, date, time, service } = req.body;
         if(time === ""){
             res.status(400).json({info: "incorrect hour because you can t choose past time" })
             console.log("failed")
         }
         else{
-        await db.query(`INSERT INTO data(date,hour,service,user_id) Values("${data}", "${time}", "${service}", ${id})`, function (error, results, fields) {
+        await db.query(`INSERT INTO data(date,hour,service,user_id) Values("${date}", "${time}", "${service}", ${id})`, function (error, results, fields) {
             console.log('db login :', error, results, fields);
             if(error) return res.status(400).json({ status: `booking failed due to sql errors: ${error}`});
            res.status(200).json({ status: 'success' });  
@@ -153,18 +151,33 @@ app.post('/erase', async (req, res) => {
 });
 
 
-app.patch('/changed', async (req, res) => {
-    try {
-        const { id, time } = req.body;
-        await db.query(`Update data SET hour="${time}" where user_id=${id}`, function (error, results, fields) {
-            console.log('db login :', error, results, fields);
-            if(error) return res.status(400).json({ status: `user could not be created due to sql errors: ${error}`});
-           res.status(200).json({ status: 'success' });  
-        }); 
-     } catch(error) {
-        res.status(500).json({ error: `something went wrong: ${error.message}`});
-    }
-});
+app.patch('/changed', (req, res) => {
+        const { booking, id, time } = req.body;
+        console.log(time)
+        let isBusy = false;
+        db.query('SELECT hour, date from data', function (error,fields,result){
+            if(error) {
+                return res.status(400).json({error: "failed"});
+            }
+            for(let field of fields) {
+                if(field.date === booking && field.hour.includes(time)){
+                    isBusy = true;
+                    break;
+                }
+            }
+            console.log('isbusy: ',isBusy);
+            if(isBusy){
+                return res.status(400).json({error: "failed"});
+             }
+             else{
+                db.query(`Update data SET hour="${time}", date="${booking}" where user_id=${id}`, function (error, results, fields) {
+                    console.log("cheers: " , error)
+                    res.status(200).send({ status: 'success' });  
+                });
+             }
+            
+        });    
+})
 
 
 app.get('/info/:id', (req, res) => {
@@ -180,7 +193,7 @@ app.get('/info/:id', (req, res) => {
         }
         else{
             console.log(result.length); 
-            res.json({result, status:"success"}); 
+            res.json({result, status:"success", date: result[0].date, time: result[0].hour}); 
         }
     })
 });
@@ -212,15 +225,14 @@ console.error("error")
 
 
 app.post('/checkEmail', (req, res) => {
-    const email  = req.body;
+    const email  = req.body.email;
     console.log(email)
-    const { id } = req.params;
     db.query(`SELECT * FROM users WHERE email="${email}"`, function (err, result, fields) {
         if(result.length) {
             console.log(err); 
             res.json({status: 'Email already registered', hasEmail: true });
         }
-        else if(result.length === 0){
+        else if(!result.length){
             console.log("free"); 
             res.json({ status: 'Email is available', hasEmail: false }); 
         }
